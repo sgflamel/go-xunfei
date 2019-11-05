@@ -17,10 +17,10 @@ const (
 	httpProto = "HTTP/1.1"
 )
 
-func (c *TranslateClient) assemblyRequestHeader(req *http.Request, host, uri string, body []byte) {
+func (c *TranslateClient) assemblyRequestHeader(req *http.Request, body []byte) {
 	req.Header.Set("Content-Type", "application/json")
 	// 设置请求头 其中Host Date 必须有
-	req.Header.Set("Host", host)
+	req.Header.Set("Host", c.parsedUrl.Host)
 	// date必须是utc时区，且不能和服务器时间相差300s
 	currentTime := time.Now().UTC().Format(time.RFC1123)
 	req.Header.Set("Date", currentTime)
@@ -28,7 +28,7 @@ func (c *TranslateClient) assemblyRequestHeader(req *http.Request, host, uri str
 	digest := "SHA-256=" + signBody(body)
 	req.Header.Set("Digest", digest)
 	// 根据请求头部内容，生成签名
-	sign := generateSignature(host, currentTime, "POST", uri, httpProto, digest, c.secret)
+	sign := generateSignature(c.parsedUrl.Host, currentTime, "POST", c.parsedUrl.RequestURI(), httpProto, digest, c.secret)
 	// 组装Authorization头部
 	authHeader := fmt.Sprintf(`api_key="%s", algorithm="%s", headers="host date request-line digest", signature="%s"`, c.key, algorithm, sign)
 	req.Header.Set("Authorization", authHeader)

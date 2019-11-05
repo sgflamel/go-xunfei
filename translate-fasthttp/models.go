@@ -1,16 +1,21 @@
 // models
 package translate
 
+import (
+	"net/url"
+)
+
 const (
 	LanguageChinese = "cn"
 	LanguageEnglish = "en"
 )
 
 type TranslateClient struct {
-	key     string
-	secret  string
-	apiAddr string
-	appid   string
+	key       string
+	secret    string
+	apiAddr   string
+	appid     string
+	parsedUrl *url.URL
 }
 
 type TranslateResponse struct {

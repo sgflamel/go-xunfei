@@ -2,6 +2,7 @@
 package translate
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 
@@ -39,7 +40,7 @@ func (c *TranslateClient) Translate(fromLan string, toLan string, content string
 	var params = make(map[string]interface{}, 0)
 	params["common"] = map[string]string{"app_id": c.appid}
 	params["business"] = map[string]string{"from": fromLan, "to": toLan}
-	params["data"] = map[string]string{"text": content}
+	params["data"] = map[string]string{"text": base64.StdEncoding.EncodeToString([]byte(content))}
 
 	body, err := json.Marshal(&params)
 
@@ -49,7 +50,7 @@ func (c *TranslateClient) Translate(fromLan string, toLan string, content string
 
 	var request = fasthttp.AcquireRequest()
 
-	c.assemblyRequestHeader(request, host, uri, body)
+	c.assemblyRequestHeader(request, body)
 
 	request.SetRequestURI(c.apiAddr)
 	request.SetBody(body)

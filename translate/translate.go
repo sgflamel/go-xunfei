@@ -3,10 +3,12 @@ package translate
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 const (
@@ -26,21 +28,28 @@ func InitWithApiKey(appid string, key string, secret string, addr string) error 
 		addr = defaultApiAddr
 	}
 
+	parse, err := url.Parse(addr)
+
+	if err != nil {
+		return err
+	}
+
 	Client = &TranslateClient{
-		appid:   appid,
-		key:     key,
-		secret:  secret,
-		apiAddr: addr,
+		appid:     appid,
+		key:       key,
+		secret:    secret,
+		apiAddr:   addr,
+		parsedUrl: parse,
 	}
 
 	return nil
 }
 
-func (c *TranslateClient) Translate(fromLan string, toLan string, content string, host, uri string) (*TranslateResponse, error) {
+func (c *TranslateClient) Translate(fromLan string, toLan string, content string) (*TranslateResponse, error) {
 	var params = make(map[string]interface{}, 0)
 	params["common"] = map[string]string{"app_id": c.appid}
 	params["business"] = map[string]string{"from": fromLan, "to": toLan}
-	params["data"] = map[string]string{"text": content}
+	params["data"] = map[string]string{"text": base64.StdEncoding.EncodeToString([]byte(content))}
 
 	body, err := json.Marshal(&params)
 
@@ -54,7 +63,7 @@ func (c *TranslateClient) Translate(fromLan string, toLan string, content string
 		return nil, err
 	}
 
-	c.assemblyRequestHeader(request, host, uri, body)
+	c.assemblyRequestHeader(request, body)
 
 	client := &http.Client{}
 
